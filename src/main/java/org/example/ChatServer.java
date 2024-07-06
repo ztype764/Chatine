@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 public class ChatServer {
     private static final Logger logger = Logger.getLogger(ChatServer.class.getName());
     static Set<ClientHandler> clientHandlers = new HashSet<>();
-    private static final String BASE_KEY = "your-secure-base-key";
     private static final Set<String> clientNames = new HashSet<>();
 
     public static void main(String[] args) {
@@ -50,8 +49,8 @@ public class ChatServer {
         }
     }
 
-    public static void removeClient(ClientHandler clientHandler) {
-        clientHandlers.remove(clientHandler);
+    public static void removeClient(String client) {
+        clientNames.remove(client);
     }
     public static boolean isNameAvailable(String name) {
         return !clientNames.contains(name);
