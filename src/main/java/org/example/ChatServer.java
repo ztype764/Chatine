@@ -21,7 +21,7 @@ public class ChatServer {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket, BASE_KEY);
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
                 clientHandlers.add(clientHandler);
                 new Thread(clientHandler).start();
             }
@@ -39,8 +39,10 @@ public class ChatServer {
     }
 
     public static void broadcastMessageFromServer(String message) {
+        String upperCaseMessage = message.toUpperCase();
+        String redMessage = "\u001B[31m" + upperCaseMessage + "\u001B[0m";
         for (ClientHandler clientHandler : clientHandlers) {
-            clientHandler.sendMessage("Server: " + message);
+            clientHandler.sendMessage("Server: " + redMessage);
         }
     }
 
@@ -61,11 +63,9 @@ class ClientHandler implements Runnable {
     private final Socket socket;
     private PrintWriter out;
     private String clientName;
-    private final String baseKey;
 
-    public ClientHandler(Socket socket, String baseKey) {
+    public ClientHandler(Socket socket) {
         this.socket = socket;
-        this.baseKey = baseKey;
     }
 
     @Override
@@ -94,7 +94,7 @@ class ClientHandler implements Runnable {
             while ((message = in.readLine()) != null) {
                 try {
                     long ntpTime = CryptoUtils.getNTPTime() / 1000;
-                    SecretKey key = CryptoUtils.deriveKey(baseKey, ntpTime);
+                    SecretKey key = CryptoUtils.deriveKey( ntpTime);
                     String decryptedMessage = CryptoUtils.decrypt(message, key);
                     ChatServer.broadcastMessage("[" + clientName + "]" + ": " + decryptedMessage, this);
                     System.out.println("[" + clientName + "]" + ": " + decryptedMessage);
@@ -119,7 +119,7 @@ class ClientHandler implements Runnable {
     public void sendMessage(String message) {
         try {
             long ntpTime = CryptoUtils.getNTPTime() / 1000;
-            SecretKey key = CryptoUtils.deriveKey(baseKey, ntpTime);
+            SecretKey key = CryptoUtils.deriveKey(ntpTime);
             String encryptedMessage = CryptoUtils.encrypt(message, key);
             out.println(encryptedMessage);
         } catch (Exception e) {

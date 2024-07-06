@@ -27,13 +27,12 @@ public class Client {
                 serverResponse = in.readLine();
             }
 
-            String baseKey = "your-secure-base-key";
-            new Thread(new ReadThread(in, baseKey)).start();
+            new Thread(new ReadThread(in)).start();
             String userInput;
             while ((userInput = stdIn.readLine()) != null) {
                 try {
                     long ntpTime = CryptoUtils.getNTPTime() / 1000;
-                    SecretKey key = CryptoUtils.deriveKey(baseKey, ntpTime);
+                    SecretKey key = CryptoUtils.deriveKey(ntpTime);
                     String encryptedMessage = CryptoUtils.encrypt(userInput, key);
                     out.println(encryptedMessage);
                 } catch (Exception e) {
@@ -58,11 +57,9 @@ public class Client {
 class ReadThread implements Runnable {
     private static final Logger logger = Logger.getLogger(ReadThread.class.getName());
     private final BufferedReader in;
-    private final String baseKey;
 
-    public ReadThread(BufferedReader in, String baseKey) {
+    public ReadThread(BufferedReader in) {
         this.in = in;
-        this.baseKey = baseKey;
     }
 
     @Override
@@ -72,7 +69,7 @@ class ReadThread implements Runnable {
             while ((serverMessage = in.readLine()) != null) {
                 try {
                     long ntpTime = CryptoUtils.getNTPTime() / 1000;
-                    SecretKey key = CryptoUtils.deriveKey(baseKey, ntpTime);
+                    SecretKey key = CryptoUtils.deriveKey(ntpTime);
                     String decryptedMessage = CryptoUtils.decrypt(serverMessage, key);
                     System.out.println(decryptedMessage);
                 } catch (Exception e) {

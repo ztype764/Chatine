@@ -1,21 +1,39 @@
 package org.example;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.Base64;
-import java.util.logging.Logger;
 
 public class CryptoUtils {
-    private static final Logger logger = Logger.getLogger(CryptoUtils.class.getName());
     private static final String HMAC_ALGO = "HmacSHA256";
     private static final String AES_ALGO = "AES";
+    private static final String KEYSTORE_TYPE = "JCEKS";
+    private static final String KEYSTORE_FILE = "mykeystore.jks";
+    private static final String KEYSTORE_PASSWORD = "keystore-password";
+    private static final String KEY_ALIAS = "mykey";
+    private static final String ENTRY_PASSWORD = "entry-password";
 
-    public static SecretKey deriveKey(String baseKey, long timestamp) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeyException {
+    private static SecretKey loadKeyFromKeystore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+        KeyStore keystore = KeyStore.getInstance(KEYSTORE_TYPE);
+        try (FileInputStream fis = new FileInputStream(KEYSTORE_FILE)) {
+            keystore.load(fis, KEYSTORE_PASSWORD.toCharArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return (SecretKey) keystore.getKey(KEY_ALIAS, ENTRY_PASSWORD.toCharArray());
+    }
+
+    public static SecretKey deriveKey(long timestamp) throws Exception {
+        SecretKey originalKey = loadKeyFromKeystore();
         Mac mac = Mac.getInstance(HMAC_ALGO);
-        SecretKeySpec keySpec = new SecretKeySpec(baseKey.getBytes(StandardCharsets.UTF_8), HMAC_ALGO);
-        mac.init(keySpec);
+        mac.init(originalKey);
         byte[] rawHmac = mac.doFinal(String.valueOf(timestamp).getBytes(StandardCharsets.UTF_8));
 
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
