@@ -63,7 +63,7 @@ public class ClientHandler implements Runnable {
                 } catch (IOException e) {
                     logger.log(Level.INFO, "Error closing socket", e);
                 }
-                ChatServer.removeClient(this);
+                ChatServer.removeClient(clientName);
                 logger.info(clientName + " has left the chat");
                 ChatServer.broadcastMessage(clientName + " has left the chat", this);
             }
