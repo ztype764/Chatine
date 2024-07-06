@@ -78,7 +78,8 @@ class ClientHandler implements Runnable {
                     long ntpTime = CryptoUtils.getNTPTime() / 1000;
                     SecretKey key = CryptoUtils.deriveKey(baseKey, ntpTime);
                     String decryptedMessage = CryptoUtils.decrypt(message, key);
-                    ChatServer.broadcastMessage("[" + clientName + "]" + ": " + decryptedMessage, this);
+                    ChatServer.broadcastMessage("\n[" + clientName + "]" + ": " + decryptedMessage, this);
+                    System.out.println("\n[" + clientName + "]" + ": " + decryptedMessage);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Error decrypting message", e);
                 }

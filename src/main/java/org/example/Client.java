@@ -22,7 +22,6 @@ public class Client {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-            // Send the client's name to the server without encryption
             out.println(client);
 
             new Thread(new ReadThread(in, baseKey)).start();
@@ -32,7 +31,6 @@ public class Client {
                     long ntpTime = CryptoUtils.getNTPTime() / 1000;
                     SecretKey key = CryptoUtils.deriveKey(baseKey, ntpTime);
                     String encryptedMessage = CryptoUtils.encrypt(userInput, key);
-                    System.out.print("\n" + client + " : ");
                     out.println(encryptedMessage);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Error encrypting message", e);
