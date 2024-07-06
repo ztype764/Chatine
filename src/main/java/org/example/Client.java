@@ -9,21 +9,25 @@ import java.util.logging.Logger;
 
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
-    private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
-    private BufferedReader stdIn;
-    private String baseKey = "your-secure-base-key";
 
     public Client(String hostname, int port, String client) {
         try {
-            socket = new Socket(hostname, port);
-            out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            stdIn = new BufferedReader(new InputStreamReader(System.in));
+            Socket socket = new Socket(hostname, port);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
+            // Check if the name is available
             out.println(client);
+            String serverResponse = in.readLine();
+            while (!"OK".equals(serverResponse)) {
+                System.out.println("Name already taken, please choose another name: ");
+                client = stdIn.readLine();
+                out.println(client);
+                serverResponse = in.readLine();
+            }
 
+            String baseKey = "your-secure-base-key";
             new Thread(new ReadThread(in, baseKey)).start();
             String userInput;
             while ((userInput = stdIn.readLine()) != null) {
