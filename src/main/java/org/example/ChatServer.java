@@ -8,8 +8,9 @@ import java.util.logging.*;
 
 public class ChatServer {
     private static final Logger logger = Logger.getLogger(ChatServer.class.getName());
-    private static Set<ClientHandler> clientHandlers = new HashSet<>();
+    static Set<ClientHandler> clientHandlers = new HashSet<>();
     private static final String BASE_KEY = "your-secure-base-key";
+    private static final Set<String> clientNames = new HashSet<>();
 
     public static void main(String[] args) {
         int port = 30023;
@@ -46,15 +47,21 @@ public class ChatServer {
     public static void removeClient(ClientHandler clientHandler) {
         clientHandlers.remove(clientHandler);
     }
+    public static boolean isNameAvailable(String name) {
+        return !clientNames.contains(name);
+    }
+
+    public static void addClientName(String name) {
+        clientNames.add(name);
+    }
 }
 
 class ClientHandler implements Runnable {
     private static final Logger logger = Logger.getLogger(ClientHandler.class.getName());
-    private Socket socket;
+    private final Socket socket;
     private PrintWriter out;
-    private BufferedReader in;
     private String clientName;
-    private String baseKey;
+    private final String baseKey;
 
     public ClientHandler(Socket socket, String baseKey) {
         this.socket = socket;
@@ -65,12 +72,23 @@ class ClientHandler implements Runnable {
     public void run() {
         try {
             out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            // Read the client's name (unencrypted)
-            clientName = in.readLine();
+            // Read the client's name and check if it's available
+            while (true) {
+                clientName = in.readLine();
+                if (ChatServer.isNameAvailable(clientName)) {
+                    ChatServer.addClientName(clientName);
+                    out.println("OK");
+                    break;
+                } else {
+                    out.println("Name already taken");
+                }
+            }
+
             logger.info(clientName + " has joined the chat");
             ChatServer.broadcastMessage(clientName + " has joined the chat", this);
+            ChatServer.clientHandlers.add(this);
 
             String message;
             while ((message = in.readLine()) != null) {
@@ -78,8 +96,8 @@ class ClientHandler implements Runnable {
                     long ntpTime = CryptoUtils.getNTPTime() / 1000;
                     SecretKey key = CryptoUtils.deriveKey(baseKey, ntpTime);
                     String decryptedMessage = CryptoUtils.decrypt(message, key);
-                    ChatServer.broadcastMessage("\n[" + clientName + "]" + ": " + decryptedMessage, this);
-                    System.out.println("\n[" + clientName + "]" + ": " + decryptedMessage);
+                    ChatServer.broadcastMessage("[" + clientName + "]" + ": " + decryptedMessage, this);
+                    System.out.println("[" + clientName + "]" + ": " + decryptedMessage);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Error decrypting message", e);
                 }
@@ -108,10 +126,15 @@ class ClientHandler implements Runnable {
             logger.log(Level.SEVERE, "Error encrypting message", e);
         }
     }
+
+    public String getClientName() {
+        return clientName;
+    }
 }
+
 class ServerInputHandler implements Runnable {
     private static final Logger logger = Logger.getLogger(ServerInputHandler.class.getName());
-    private BufferedReader stdIn;
+    private final BufferedReader stdIn;
 
     public ServerInputHandler() {
         stdIn = new BufferedReader(new InputStreamReader(System.in));
