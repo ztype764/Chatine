@@ -10,15 +10,17 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.Base64;
+import java.util.logging.Logger;
 
 public class CryptoUtils {
+    private static final Logger logger = Logger.getLogger(CryptoUtils.class.getName());
     private static final String HMAC_ALGO = "HmacSHA256";
     private static final String AES_ALGO = "AES";
     private static final String KEYSTORE_TYPE = "JCEKS";
     private static final String KEYSTORE_FILE = "mykeystore.jks";
-    private static final String KEYSTORE_PASSWORD = "keystore-password";
+    private static final String KEYSTORE_PASSWORD = "";
     private static final String KEY_ALIAS = "mykey";
-    private static final String ENTRY_PASSWORD = "entry-password";
+    private static final String ENTRY_PASSWORD = "";
 
     private static SecretKey loadKeyFromKeystore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
         KeyStore keystore = KeyStore.getInstance(KEYSTORE_TYPE);
@@ -27,7 +29,12 @@ public class CryptoUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return (SecretKey) keystore.getKey(KEY_ALIAS, ENTRY_PASSWORD.toCharArray());
+        Key key = keystore.getKey(KEY_ALIAS, ENTRY_PASSWORD.toCharArray());
+        if (key instanceof SecretKey) {
+            return (SecretKey) key;
+        } else {
+            throw new IllegalArgumentException("Not a secret key");
+        }
     }
 
     public static SecretKey deriveKey(long timestamp) throws Exception {
