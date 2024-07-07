@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.logging.Logger;
 
@@ -18,9 +20,9 @@ public class CryptoUtils {
     private static final String AES_ALGO = "AES";
     private static final String KEYSTORE_TYPE = "JCEKS";
     private static final String KEYSTORE_FILE = "mykeystore.jks";
-    private static final String KEYSTORE_PASSWORD = "";
+    private static final String KEYSTORE_PASSWORD = "faster";
     private static final String KEY_ALIAS = "mykey";
-    private static final String ENTRY_PASSWORD = "";
+    private static final String ENTRY_PASSWORD = "faster";
 
     private static SecretKey loadKeyFromKeystore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
         KeyStore keystore = KeyStore.getInstance(KEYSTORE_TYPE);
@@ -66,6 +68,8 @@ public class CryptoUtils {
     }
 
     public static long getNTPTime() {
-        return System.currentTimeMillis();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("UTC")); // Use UTC timezone
+        now = now.withSecond(0).withNano(0); // Set seconds and nanoseconds to zero
+        return now.atZone(ZoneId.of("UTC")).toEpochSecond(); // Convert to epoch seconds
     }
 }
