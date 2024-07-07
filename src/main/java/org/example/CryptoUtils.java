@@ -20,9 +20,9 @@ public class CryptoUtils {
     private static final String AES_ALGO = "AES";
     private static final String KEYSTORE_TYPE = "JCEKS";
     private static final String KEYSTORE_FILE = "mykeystore.jks";
-    private static final String KEYSTORE_PASSWORD = "faster";
+    private static final String KEYSTORE_PASSWORD = "";
     private static final String KEY_ALIAS = "mykey";
-    private static final String ENTRY_PASSWORD = "faster";
+    private static final String ENTRY_PASSWORD = "";
 
     private static SecretKey loadKeyFromKeystore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
         KeyStore keystore = KeyStore.getInstance(KEYSTORE_TYPE);
