@@ -3,6 +3,7 @@ package org.example;
 import javax.crypto.SecretKey;
 import java.io.*;
 import java.net.Socket;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,7 +22,7 @@ public class Client {
             out.println(client);
             String serverResponse = in.readLine();
             while (!"OK".equals(serverResponse)) {
-                System.out.println("Name already taken, please choose another name: ");
+                System.out.println(serverResponse);
                 client = stdIn.readLine();
                 out.println(client);
                 serverResponse = in.readLine();
@@ -45,12 +46,19 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        String hostname = "localhost";
-        int port = 30023;
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Write your name: ");
-        String client = scanner.nextLine(); // Use nextLine() to capture full name
-        new Client(hostname, port, client);
+        Properties properties = new Properties();
+        try (InputStream input = new FileInputStream("system.properties")) {
+            properties.load(input);
+            String hostname = properties.getProperty("server.hostname", "localhost");
+            int port = Integer.parseInt(properties.getProperty("server.port", "30023"));
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Write your name: ");
+            String client = scanner.nextLine();
+            new Client(hostname, port, client);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error loading system.properties", e);
+        }
     }
 }
 
